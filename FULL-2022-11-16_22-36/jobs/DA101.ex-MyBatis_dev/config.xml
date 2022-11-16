@@ -1,0 +1,416 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<flow-definition plugin="workflow-job@1207.ve6191ff089f8">
+  <actions>
+    <org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobAction plugin="pipeline-model-definition@2.2118.v31fd5b_9944b_5"/>
+    <org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction plugin="pipeline-model-definition@2.2118.v31fd5b_9944b_5">
+      <jobProperties>
+        <string>org.jenkinsci.plugins.workflow.job.properties.DisableConcurrentBuildsJobProperty</string>
+        <string>org.jenkinsci.plugins.workflow.job.properties.DurabilityHintJobProperty</string>
+        <string>jenkins.model.BuildDiscarderProperty</string>
+      </jobProperties>
+      <triggers/>
+      <parameters>
+        <string>deploy_yn</string>
+        <string>app_restart_yn000</string>
+        <string>build_profile</string>
+        <string>publish_yn</string>
+        <string>build_project_name</string>
+        <string>build_yn</string>
+      </parameters>
+      <options/>
+    </org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction>
+  </actions>
+  <description>■ VM01서버에 war배포하기&#xd;
+&#xd;
+● SVN    : svn://192.168.35.111/egov.dev01/DA101.ex-MyBatis_dev&#xd;
+● Target : VM01&#xd;
+                /home/vm01/webhome/DA101.ex-MyBatis</description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <hudson.security.AuthorizationMatrixProperty>
+      <inheritanceStrategy class="org.jenkinsci.plugins.matrixauth.inheritance.NonInheritingStrategy"/>
+      <permission>USER:hudson.model.Item.Build:dev01</permission>
+      <permission>USER:hudson.model.Item.Read:dev01</permission>
+      <permission>USER:hudson.model.Item.Workspace:dev01</permission>
+      <permission>USER:hudson.scm.SCM.Tag:dev01</permission>
+    </hudson.security.AuthorizationMatrixProperty>
+    <org.jenkinsci.plugins.workflow.job.properties.DisableConcurrentBuildsJobProperty>
+      <abortPrevious>false</abortPrevious>
+    </org.jenkinsci.plugins.workflow.job.properties.DisableConcurrentBuildsJobProperty>
+    <org.jenkinsci.plugins.workflow.job.properties.DurabilityHintJobProperty>
+      <hint>MAX_SURVIVABILITY</hint>
+    </org.jenkinsci.plugins.workflow.job.properties.DurabilityHintJobProperty>
+    <jenkins.model.BuildDiscarderProperty>
+      <strategy class="hudson.tasks.LogRotator">
+        <daysToKeep>-1</daysToKeep>
+        <numToKeep>40</numToKeep>
+        <artifactDaysToKeep>-1</artifactDaysToKeep>
+        <artifactNumToKeep>-1</artifactNumToKeep>
+      </strategy>
+    </jenkins.model.BuildDiscarderProperty>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <hudson.model.StringParameterDefinition>
+          <name>build_project_name</name>
+          <description>빌드할 프로젝트 명?</description>
+          <defaultValue>DA101.ex-MyBatis</defaultValue>
+          <trim>true</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.ChoiceParameterDefinition>
+          <name>build_profile</name>
+          <description>Active Profile?</description>
+          <choices class="java.util.Arrays$ArrayList">
+            <a class="string-array">
+              <string>dev</string>
+              <string>test</string>
+              <string>verify</string>
+              <string>prod</string>
+            </a>
+          </choices>
+        </hudson.model.ChoiceParameterDefinition>
+        <hudson.model.ChoiceParameterDefinition>
+          <name>build_yn</name>
+          <description>빌드하시겠습니까?</description>
+          <choices class="java.util.Arrays$ArrayList">
+            <a class="string-array">
+              <string>YES</string>
+              <string>NO</string>
+            </a>
+          </choices>
+        </hudson.model.ChoiceParameterDefinition>
+        <hudson.model.ChoiceParameterDefinition>
+          <name>publish_yn</name>
+          <description>AP서버에 배포하시겠습니까?</description>
+          <choices class="java.util.Arrays$ArrayList">
+            <a class="string-array">
+              <string>YES</string>
+              <string>NO</string>
+            </a>
+          </choices>
+        </hudson.model.ChoiceParameterDefinition>
+        <hudson.model.ChoiceParameterDefinition>
+          <name>deploy_yn</name>
+          <description>AP서버에 Deploy하시겠습니까?</description>
+          <choices class="java.util.Arrays$ArrayList">
+            <a class="string-array">
+              <string>YES</string>
+              <string>NO</string>
+            </a>
+          </choices>
+        </hudson.model.ChoiceParameterDefinition>
+        <hudson.model.ChoiceParameterDefinition>
+          <name>app_restart_yn000</name>
+          <description>Application을 다시 시작 하시겠습니까?</description>
+          <choices class="java.util.Arrays$ArrayList">
+            <a class="string-array">
+              <string>YES</string>
+              <string>NO</string>
+            </a>
+          </choices>
+        </hudson.model.ChoiceParameterDefinition>
+        <hudson.model.ChoiceParameterDefinition>
+          <name>app_restart_yn</name>
+          <description>Application을 다시 시작 하시겠습니까?</description>
+          <choices class="java.util.Arrays$ArrayList">
+            <a class="string-array">
+              <string>YES</string>
+              <string>NO</string>
+            </a>
+          </choices>
+        </hudson.model.ChoiceParameterDefinition>
+      </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
+  </properties>
+  <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps@3536.vb_8a_6628079d5">
+    <script>
+def sshPublisher( servername, sourceFiles, removePrefix, remoteDirectory, execCommand ) 
+{
+	if( servername == &quot;&quot; ) 
+	{
+		echo &quot;servername이 없음&quot;
+		return
+	}
+	if( sourceFiles == &quot;&quot; ) 
+	{
+		echo &quot;sourceFiles가 없음&quot;
+		return
+	}
+	if( removePrefix == &quot;&quot; ) 
+	{
+		echo &quot;removePrefix가 없음&quot;
+		return
+	}
+	if( remoteDirectory == &quot;&quot; ) 
+	{
+		echo &quot;remoteDirectory가 없음&quot;
+		return
+	}
+	if( execCommand == null ) 
+	{
+		execCommand = &quot;&quot;
+	}
+
+	echo  &quot;###############################################&quot;
+	echo  &quot;# sshPublisher param&quot;
+	echo &quot;servername : &quot; + servername
+	echo &quot;sourceFiles : &quot; + sourceFiles
+	echo &quot;removePrefix : &quot; + removePrefix
+	echo &quot;remoteDirectory : &quot; + remoteDirectory
+	echo &quot;execCommand : &quot; + execCommand
+	echo  &quot;###############################################&quot;
+	
+    sshPublisher(
+        publishers: 
+          [
+	           sshPublisherDesc(
+		           configName: servername, 
+			       transfers:  
+			                   [
+		                            sshTransfer
+		                            (
+			                            excludes: &apos;&apos;,
+			                            remoteDirectory: remoteDirectory,
+			                            remoteDirectorySDF: false,
+			                            removePrefix: removePrefix,
+			                            sourceFiles: sourceFiles,
+			                            execCommand: execCommand
+		                            ) 
+			                    ],
+                    usePromotionTimestamp: false,
+                    useWorkspaceInPromotion: false,
+                	verbose: true
+		        )    
+           ]
+    )
+}
+
+def makeExecCommandEnvironment( buildProjectName, buildNumber, docBase, targetBase ) 
+{
+	if( buildProjectName == &quot;&quot; ) return &quot;&quot;
+	if( buildNumber == &quot;&quot; ) return &quot;&quot;
+	if( docBase == &quot;&quot; ) return &quot;&quot;
+	if( targetBase == &quot;&quot; ) return &quot;&quot;
+
+	return &apos;&apos;&apos;
+
+  	#!/bin/bash
+    . /home/vm01/.bash_profile
+
+	BUILD_DATE=`date +%Y%m%d%H%M`
+	PROJECT_NAME=&apos;&apos;&apos; + buildProjectName + &apos;&apos;&apos;
+	DOC_BASE=&apos;&apos;&apos; + docBase + &apos;&apos;&apos;
+	TARGET_BASE=&apos;&apos;&apos; + targetBase + &apos;&apos;&apos;
+
+	&apos;&apos;&apos;
+}
+
+def makeExecCommand_publish( buildProjectName, buildNumber, docBase, targetBase, compressionType ) 
+{
+	if( buildProjectName == &quot;&quot; ) return &quot;&quot;
+	if( buildNumber == &quot;&quot; ) return &quot;&quot;
+	if( docBase == &quot;&quot; ) return &quot;&quot;
+	if( targetBase == &quot;&quot; ) return &quot;&quot;
+	if( compressionType == &quot;&quot; ) return &quot;&quot;
+
+	def sshCommand = makeExecCommandEnvironment(buildProjectName, buildNumber, docBase, targetBase) + &apos;&apos;&apos;
+	echo &quot;UnArchive Start===&quot;
+
+	PROJECT_NAME=&apos;&apos;&apos; + buildProjectName + &apos;&apos;&apos;
+	DOC_BASE=&apos;&apos;&apos; + docBase + &apos;&apos;&apos;
+
+	WEBHOME_PATH=$DOC_BASE/$PROJECT_NAME
+	WEBHOME_BACKUP_PATH=&apos;/home/vm01/backup&apos;
+
+	mkdir -p $WEBHOME_PATH
+	mkdir -p $WEBHOME_BACKUP_PATH	
+	echo $WEBHOME_PATH
+	echo $WEBHOME_BACKUP_PATH	
+
+	if [ &apos;&apos;&apos; + compressionType + &apos;&apos;&apos; == &quot;war&quot; ]; then
+
+		rm -Rf $WEBHOME_PATH/*.*
+
+		cd /home/vm01/tmp
+		cp *.&apos;&apos;&apos; + compressionType + &apos;&apos;&apos; $WEBHOME_PATH
+		cp *.&apos;&apos;&apos; + compressionType + &apos;&apos;&apos; $WEBHOME_BACKUP_PATH
+
+		rm -Rf /home/vm01/tmp/*.&apos;&apos;&apos; + compressionType + &apos;&apos;&apos;
+
+		cd $WEBHOME_PATH
+
+		jar xvf *.&apos;&apos;&apos; + compressionType + &apos;&apos;&apos;
+		rm *.&apos;&apos;&apos; + compressionType + &apos;&apos;&apos;	
+	fi
+
+	echo &quot;UnArchive End ========&quot;  &apos;&apos;&apos;
+
+
+	return sshCommand
+}
+
+pipeline 
+{
+    agent any
+    
+    environment 
+    {
+        node_name = &apos;master&apos;
+        buildVersion = VersionNumber(
+             projectStartDate: &apos;2018-05-01&apos;,
+	         versionNumberString: &apos;${BUILD_NUMBER}&apos;,
+	         versionPrefix: &apos;0.0.&apos;,
+             worstResultForIncrement: &apos;SUCCESS&apos;
+        )
+    }
+    
+    tools 
+    {
+        jdk &apos;jdk1.8.0_77&apos;
+        //jdk &apos;11.0.2&apos;
+        maven &apos;apache-maven-3.6.3&apos;
+        //maven &apos;Maven3.8.6&apos;
+        
+    }
+    
+    parameters 
+    {
+			string(name: &apos;build_project_name&apos;, description: &apos;빌드할 프로젝트 명?&apos;, defaultValue: &apos;DA101.ex-MyBatis&apos;, trim: true)
+            choice(name: &apos;build_profile&apos;, description: &apos;Active Profile?&apos;, choices: &quot;dev\ntest\nverify\nprod&quot;)
+            choice(name: &apos;build_yn&apos;, description: &apos;빌드하시겠습니까?&apos;, choices: &quot;YES\nNO&quot;)
+            choice(name: &apos;publish_yn&apos;, description: &apos;AP서버에 배포하시겠습니까?&apos;, choices: &quot;YES\nNO&quot;)
+            choice(name: &apos;deploy_yn&apos;, description: &apos;AP서버에 Deploy하시겠습니까?&apos;, choices: &quot;YES\nNO&quot;)
+            choice(name: &apos;app_restart_yn000&apos;, description: &apos;Application을 다시 시작 하시겠습니까?&apos;, choices: &quot;YES\nNO&quot;)
+    }
+    
+    options 
+    {
+        buildDiscarder logRotator(artifactDaysToKeepStr: &apos;&apos;, artifactNumToKeepStr: &apos;&apos;, daysToKeepStr: &apos;&apos;, numToKeepStr: &apos;40&apos;)
+        durabilityHint &apos;MAX_SURVIVABILITY&apos;
+		disableConcurrentBuilds()
+        timestamps()
+    }
+    
+    stages
+    {
+		/* =============================== */    
+		/* SVN CheckOut                    */
+   		/* =============================== */
+        stage(&apos;Checkout&apos;) 
+        {
+            steps 
+            {
+                   echo &quot;Checkout - ${build_project_name}&quot;
+                   script 
+                   {
+	                      def scm_url = &quot;svn://192.168.35.111/egov.dev01/&quot;
+	                      if( &quot;${build_profile}&quot; == &quot;dev&quot; ) 
+	                      {
+	                          scm_url += &quot;${build_project_name}/trunk&quot;
+	                      } 
+	                      else if( &quot;${build_profile}&quot; == &quot;test&quot;) 
+	                      {
+	                          scm_url += &quot;${build_project_name}/branches/test&quot;
+	                      } 
+	                      else if( &quot;${build_profile}&quot; == &quot;verify&quot;) 
+	                      {
+	                          scm_url += &quot;${build_project_name}/branches/verify&quot;
+	                      } 
+	                      else if( &quot;${build_profile}&quot; == &quot;prod&quot;) 
+	                      {
+	                          scm_url += &quot;${build_project_name}/branches/runtime&quot;
+	                      }
+		                      
+					      checkout(
+					                 [
+					                   $class: &apos;SubversionSCM&apos;, 
+					                   locations: 
+					                              [[
+					                                 cancelProcessOnExternalsFail:true,
+					                    	         credentialsId: &apos;svn_user01&apos;,      /*  SVN ID : user01  */
+		                                             depthOption: &apos;infinity&apos;,
+		                                             ignoreExternalsOption: true,
+			                                         local: &apos;.&apos;,
+								                     remote: scm_url
+							                       ]],
+							            quietOperation: false,
+							            workspaceUpdater: [$class: &apos;UpdateUpdater&apos;]
+		                              ]
+		                            )	
+	                }	
+              }   
+        }
+
+		/* =============================== */    
+		/* Maven Build                     */
+   		/* =============================== */
+        stage(&apos;Build&apos;) 
+        {
+            steps 
+            {
+				echo &quot;Build - ${build_profile} : ${build_yn}&quot;
+				script 
+				{
+					if( &quot;${build_yn}&quot; == &quot;YES&quot; ) 
+					{
+						 sh &quot;mvn -e -X -P${build_profile} -Dmaven.test.failure.ignore clean install -DbuildVersion=${buildVersion}&quot;
+					}
+				}
+            }
+        }
+        
+
+		/* =============================== */    
+		/* Maven Publish                     */
+   		/* =============================== */
+        stage(&apos;Publish&apos;) 
+        {
+	        steps 
+	        {
+                echo &quot;Publish - ${publish_yn}&quot;
+		        script 
+		        {
+						if( &quot;${publish_yn}&quot; == &quot;YES&quot;) 
+						{
+							if( &quot;${build_profile}&quot; == &quot;dev&quot;) 
+							{
+								echo &quot; ==== Start WEB Publish === &quot;
+								echo &quot; ==== [TO-DO] WEB Publish === &quot;
+								echo &quot; === END WEB Publish === &quot;
+								
+								echo &quot; === Start WAS Publish === &quot;
+								sshPublisher(
+								                 &quot;VM01_SSH&quot;,                                         /* param : servername       */
+											     &quot;target/*&quot;,                      		             /* param : sourceFiles      */
+											     &quot;target&quot;,                                           /* param : removePrefix     */
+										         &quot;/home/vm01/tmp&quot;,    	                             /* param : remoteDirectory  */
+											     makeExecCommand_publish(
+											                              &quot;${build_project_name}&quot;, 
+											                              &quot;${BUILD_NUMBER}&quot;, 
+											                              &apos;/home/vm01/webhome&apos;, 
+											                              &apos;target&apos;, 
+											                              &apos;war&apos;
+											                             )                           /* param : execCommand      */
+										    )
+								echo &quot; === END WAS Publish === &quot;
+							} 
+							else if( &quot;${build_profile}&quot; == &quot;test&quot; ) 
+							{					
+							} 
+							else if( &quot;${build_profile}&quot; == &quot;verify&quot; ) 
+							{					
+							} 
+							else if( &quot;${build_profile}&quot; == &quot;prod&quot; ) 
+							{					
+							}		
+						} /* ~ if  */
+		        } /*  ~ script  */
+	        } /*  ~ steps */
+        } /*  ~ stage */        
+
+    }  /*  ~ stages */
+}  /*  ~ pipeline */</script>
+    <sandbox>false</sandbox>
+  </definition>
+  <triggers/>
+  <disabled>false</disabled>
+</flow-definition>

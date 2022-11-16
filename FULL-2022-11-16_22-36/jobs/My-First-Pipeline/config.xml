@@ -1,0 +1,70 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<flow-definition plugin="workflow-job@1207.ve6191ff089f8">
+  <actions>
+    <org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobAction plugin="pipeline-model-definition@2.2118.v31fd5b_9944b_5"/>
+    <org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction plugin="pipeline-model-definition@2.2118.v31fd5b_9944b_5">
+      <jobProperties/>
+      <triggers/>
+      <parameters/>
+      <options/>
+    </org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction>
+  </actions>
+  <description>My-First-Pipeline</description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <hudson.security.AuthorizationMatrixProperty>
+      <inheritanceStrategy class="org.jenkinsci.plugins.matrixauth.inheritance.NonInheritingStrategy"/>
+    </hudson.security.AuthorizationMatrixProperty>
+  </properties>
+  <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps@3536.vb_8a_6628079d5">
+    <script>pipeline {
+    agent any
+    stages {
+        stage(&apos;Compile&apos;) {
+            steps {
+                echo &quot;Compiled successfully!&quot;;
+            }
+        }
+
+        stage(&apos;JUnit&apos;) {
+            steps {
+                echo &quot;JUnit passed successfully!&quot;;
+            }
+        }
+
+        stage(&apos;Code Analysis&apos;) {
+            steps {
+                echo &quot;Code Analysis completed successfully!&quot;;
+            }
+        }
+
+        stage(&apos;Deploy&apos;) {
+            steps {
+                echo &quot;Deployed successfully!&quot;;
+            }
+        }
+    }
+
+    post {
+      always {
+        echo &quot;This will always run&quot;
+      }
+      success {
+        echo &quot;This will run when the run finished successfully&quot;
+      }
+      failure {
+        echo &quot;This will run if failed&quot;
+      }
+      unstable {
+        echo &quot;This will run when the run was marked as unstable&quot;
+      }
+      changed {
+        echo &quot;This will run when the state of the pipeline has changed&quot;
+      }
+    }
+}</script>
+    <sandbox>true</sandbox>
+  </definition>
+  <triggers/>
+  <disabled>false</disabled>
+</flow-definition>

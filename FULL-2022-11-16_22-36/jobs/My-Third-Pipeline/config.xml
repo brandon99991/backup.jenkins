@@ -1,0 +1,64 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<flow-definition plugin="workflow-job@1207.ve6191ff089f8">
+  <actions>
+    <org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobAction plugin="pipeline-model-definition@2.2118.v31fd5b_9944b_5"/>
+    <org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction plugin="pipeline-model-definition@2.2118.v31fd5b_9944b_5">
+      <jobProperties/>
+      <triggers/>
+      <parameters/>
+      <options/>
+    </org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction>
+  </actions>
+  <description>My-Third-Pipeline&#xd;
+&#xd;
+My-Second-Pipeline&#xd;
+&#xd;
+● Pipeline &gt; Script 소스&#xd;
+   pipeline_sample4_exercies11.yml (git clone, build)&#xd;
+&#xd;
+● Pipeline &gt; Script 소스&#xd;
+   deploy stage 추가 (tomcat deploy)&#xd;
+</description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <hudson.security.AuthorizationMatrixProperty>
+      <inheritanceStrategy class="org.jenkinsci.plugins.matrixauth.inheritance.NonInheritingStrategy"/>
+    </hudson.security.AuthorizationMatrixProperty>
+  </properties>
+  <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps@3536.vb_8a_6628079d5">
+    <script>pipeline {
+    agent any
+    tools { 
+      maven &apos;Maven3.8.6&apos;
+    }
+    stages {
+        stage(&apos;github clone&apos;) {
+            steps {
+                git branch: &apos;main&apos;, url: &apos;https://github.com/brandon99991/cicd-web-project.git&apos;; 
+            }
+        }
+        
+        stage(&apos;build&apos;) {
+            steps {
+                sh &apos;&apos;&apos;
+                    echo build start
+                    mvn clean compile package -DskipTests=true
+                &apos;&apos;&apos;
+            }
+        }
+        
+        stage(&apos;deploy&apos;) {
+            steps {
+                deploy adapters: [tomcat9(credentialsId: &apos;deployer_user&apos;, path: &apos;&apos;, url: &apos;http://localhost:7001&apos;)], contextPath: null, war: &apos;**/*.war&apos;
+            }
+        }
+        
+        
+        
+    }
+}</script>
+    <sandbox>true</sandbox>
+  </definition>
+  <triggers/>
+  <disabled>false</disabled>
+</flow-definition>
